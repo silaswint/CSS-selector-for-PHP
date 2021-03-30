@@ -23,7 +23,7 @@ $query = $doc->_("ul :nth-of-type(odd)");
 ?>
 
 <h2>Selected nodes</h2>
-This is the xPath string: <?php echo $doc->getXPathAString(); ?><br /><br />
+This is the xPath string: <?php echo $doc->getXPathAsString(); ?><br /><br />
 
 <?php
 if($query === false) {

@@ -89,7 +89,7 @@ Accepted setDoc() types:
 - friendly to whitespaces
 - nth selector logic: 2n+1, 2, -n, etc.
 - put "->prove()" before setDoc() to check how your browser handles your query
-- $doc->getXPathAString() tells you the generated XPath string
+- $doc->getXPathAsString() tells you the generated XPath string
 
 ### Information
 

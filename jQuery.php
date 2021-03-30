@@ -438,7 +438,7 @@ class Doc {
         return $this->query_string_array;
     }
 
-    public function getXPathAString(): string
+    public function getXPathAsString(): string
     {
         return $this->xpath_string;
     }
