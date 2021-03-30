@@ -150,7 +150,8 @@ class Doc {
                 $this->string_recreated .= $content;
             };
 
-            // -- "position()" needs to be the first one
+            // -- pseudo classes
+            // "position()" needs to be the first one
             $string_pseudo_classes = [];
             if(isset($currentNode["pseudo"])) {
                 $pseudo_classes = $currentNode["pseudo"];
@@ -190,6 +191,7 @@ class Doc {
                 $all_attributes[] = 'name()="' . $currentNode["tag_name"] . '"';
             }
 
+            // -- attributes
             if(isset($currentNode["attr"])) {
                 $attributes = $currentNode["attr"];
                 foreach ($attributes as $attributeName => $attribute) {
@@ -218,6 +220,7 @@ class Doc {
                 $saveString("[" . implode(" and ", $all_attributes) . "]");
             }
 
+            // -- pseudo classes
             $string_pseudo_classes = [];
             if(isset($currentNode["pseudo"])) {
                 $pseudo_classes = $currentNode["pseudo"];
@@ -252,26 +255,31 @@ class Doc {
                 $saveString("[" . implode(" and ", $string_pseudo_classes) . "]");
             }
 
+            // -- descendant
             if(isset($currentNode["descendant"])) {
                 $saveString("//*");
                 $string .= $this->buildXPathString($currentNode["descendant"]);
             }
 
+            // -- child
             elseif(isset($currentNode["child"])) {
                 $saveString("/*");
                 $string .= $this->buildXPathString($currentNode["child"]);
             }
 
+            // -- adjacent sibling
             elseif(isset($currentNode["adjacent_sibling"])) {
                 $saveString("/following-sibling::*[1]");
                 $string .= $this->buildXPathString($currentNode["adjacent_sibling"]);
             }
 
+            // -- general sibling
             elseif(isset($currentNode["general_sibling"])) {
                 $saveString("/following-sibling::*");
                 $string .= $this->buildXPathString($currentNode["general_sibling"]);
             }
 
+            // -- result string for current node
             $commas[] = $string;
         }
 
