@@ -1,16 +1,21 @@
 <?php
-require_once __DIR__ . "/inc/BuildQueryComponents.php";
+require_once __DIR__ . "/Inc/BuildQueryComponents.php";
 
 class Doc {
-    private string $string_recreated = "";
+    private string $loadedModuleName = "";
+    public string $string_recreated = "";
 
     /**
      * @var false|string
      */
-    private false|string $html;
+    public false|string $html;
     private bool $prove = false;
     private array $query_string_array;
     private string $xpath_string;
+    /**
+     * @var mixed
+     */
+    private $data;
 
     public function __construct()
     {
@@ -113,7 +118,7 @@ class Doc {
         // -- initialize DOMDocument
         $doc = new DOMDocument();
         libxml_use_internal_errors(true);
-        $doc->loadHTML($html);
+        $doc->loadHTML($html, LIBXML_HTML_NOIMPLIED);
         libxml_use_internal_errors();
 
         // -- initialize DOMXPath
@@ -130,7 +135,7 @@ class Doc {
         return $xPath->query($xPathExpression);
     }
 
-    private function buildXPathString($currentNodes): string
+    public function buildXPathString($currentNodes): string
     {
         $commas = [];
 
@@ -150,81 +155,28 @@ class Doc {
             if(isset($currentNode["pseudo"])) {
                 $pseudo_classes = $currentNode["pseudo"];
                 foreach($pseudo_classes as $key => $values) {
-                    switch(strtolower($key)) {
-                        case "nth-child":
-                            $inner_commas = [];
-                            foreach ($values as $value) {
-                                $inner_commas[] = $this->buildNthXQuery($this->string_recreated, $value[0]["query_string"]);
-                            }
 
-                            $string_pseudo_classes[] = "(" . implode(" or ", $inner_commas) . ")";
-                            break;
+                    try {
+                        $module_pseudo_classes = $this->getModule("Pseudo_classes");
+                        if($module_pseudo_classes == false) {
+                            throw new Exception("module does not exist");
+                        }
 
-                        case "first-child":
-                            $string_pseudo_classes[] = $this->buildNthXQuery($this->string_recreated, "0n+1");
-                            break;
+                        $this->setData([
+                            "values" => $values
+                        ]);
 
-                        case "last-child":
-                            $string_pseudo_classes[] = "position() = last()";
-                            break;
+                        $module_pseudo_classes_entry = $module_pseudo_classes->getEntry($key, "first");
+                        if($module_pseudo_classes_entry === false) {
+                            throw new Exception("module entry for '" . $key . "' does not exist");
+                        }
 
-                        case "only-child":
-                            $string_pseudo_classes[] = "count(preceding-sibling::*)+count(following-sibling::*)=0";
-                            break;
+                    } catch(Exception $e) {
+                        die($e);
+                    }
 
-                        case "not":
-                            $list_not = [];
-                            foreach ($values as $value) {
-                                $not_xpath_string = $this->buildXPathString($value);
-                                $list_not[] = preg_replace('/^\[(.*)\]$/', '$1', $not_xpath_string); // delete first and last [] brackets
-                            }
-
-                            $string_pseudo_classes[] = "not(" . implode(" or ", $list_not) . ")";
-                            break;
-
-                        case "required":
-                            $ors = [
-                                '(name()="input" and @required)',
-                                '(name()="select" and @required)',
-                                '(name()="textarea" and @required)'
-                            ];
-
-                            $string_pseudo_classes[] = "(" . implode(" or ", $ors) . ")";
-                            break;
-
-                        case "optional":
-                            $ors = [
-                                '(not(@required) and name()="input")',
-                                '(not(@required) and name()="select")',
-                                '(not(@required) and name()="textarea")',
-                            ];
-
-                            $string_pseudo_classes[] = "(" . implode(" or ", $ors) . ")";
-                            break;
-
-                        case "read-write":
-                            $ors = [
-                                '(not(@contenteditable="false") and @contenteditable)',
-                                '(@contenteditable="true")',
-                                '(not(@readonly) and name()="input")',
-                                '(not(@readonly) and name()="textarea")',
-                                '(not(@readonly) and name()="select")',
-                            ];
-
-                            $string_pseudo_classes[] = "(" . implode(" or ", $ors) . ")";
-                            break;
-
-                        case "read-only":
-                            $ors = [
-                                '(not(@contenteditable="false") and not(@contenteditable="true"))',
-                                '(@contenteditable="false" and @readonly)',
-                                '(name()="input" and @readonly and @contenteditable="false")',
-                                '(name()="textarea" and @readonly and @contenteditable="false")',
-                                '(name()="select" and @readonly and @contenteditable="false")',
-                            ];
-
-                            $string_pseudo_classes[] = "(" . implode(" or ", $ors) . ")";
-                            break;
+                    if($module_pseudo_classes_entry !== NULL) {
+                        $string_pseudo_classes[] = $module_pseudo_classes_entry;
                     }
                 }
             }
@@ -270,57 +222,28 @@ class Doc {
             if(isset($currentNode["pseudo"])) {
                 $pseudo_classes = $currentNode["pseudo"];
                 foreach($pseudo_classes as $key => $values) {
-                    switch(strtolower($key)) {
-                        case "empty":
-                            $string_pseudo_classes[] = "count(*)=0";
-                            break;
+                    try {
+                        $module_pseudo_classes = $this->getModule("Pseudo_classes");
+                        if($module_pseudo_classes == false) {
+                            throw new Exception("module does not exist");
+                        }
 
-                        case "nth-of-type":
-                            $inner_commas = [];
-                            foreach ($values as $value2) {
-                                $inner_commas[] = $this->buildNthXQuery($this->string_recreated, $value2[0]["query_string"]);
-                            }
+                        $this->setData([
+                            "values" => $values
+                        ]);
 
-                            $string_pseudo_classes[] = "(" . implode(" or ", $inner_commas) . ")";
-                            break;
+                        $module_pseudo_classes_entry = $module_pseudo_classes->getEntry($key, "last");
+                        if($module_pseudo_classes_entry === false) {
+                            throw new Exception("module entry for '" . $key . "' does not exist");
+                        }
 
-                        case "first-of-type":
-                            $string_pseudo_classes[] = $this->buildNthXQuery($this->string_recreated, "0n+1");
-                            break;
+                        if($module_pseudo_classes_entry !== NULL) {
+                            $string_pseudo_classes[] = $module_pseudo_classes_entry;
+                        }
 
-                        case "last-of-type":
-                            $string_pseudo_classes[] = "position() = last()";
-                            break;
 
-                        case "only-of-type":
-                            $string_pseudo_classes[] = "count(..) = 1";
-                            break;
-
-                        case "has":
-                            $has_string = "";
-                            foreach ($values as $node) {
-                                $has_build_xpath_string = $this->buildXPathString($node);
-                                $has_string .= $has_build_xpath_string;
-                            }
-
-                            if($has_string !== "") {
-                                $string_pseudo_classes[] = "self::*" . $has_string . "";
-                            }
-                            break;
-
-                        case "nth-child":
-                        case "first-child":
-                        case "last-child":
-                        case "only-child":
-                        case "not":
-                        case "required":
-                        case "optional":
-                        case "read-write":
-                        case "read-only":
-                            break;
-
-                        default:
-                            die("<pre>Unknown pseudo class selector '" . $key . "'</pre>");
+                    } catch(Exception $e) {
+                        die($e);
                     }
                 }
             }
@@ -355,13 +278,16 @@ class Doc {
         return implode(" | //*", $commas);
     }
 
-    private function buildNthXQuery(string $previousXQueryString, string $nthString): string
+    public function buildNthXQuery(string $previousXQueryString, string $nthString): string
     {
+        if(!isset($this->html)) {
+            die("html is not initialized");
+        }
 
         // -- initialize DOMDocument
         $doc = new DOMDocument();
         libxml_use_internal_errors(true);
-        $doc->loadHTML($this->html);
+        $doc->loadHTML($this->html, LIBXML_HTML_NOIMPLIED);
         libxml_use_internal_errors();
 
         // -- initialize DOMXPath
@@ -492,7 +418,7 @@ class Doc {
         echo /** @lang HTML */"<style>#" . $rand . " * {border: 1px solid black; margin-left: 10px} #" . $rand . " " . $queryString . " { color: white; background: red; display: block; }</style><div><div><b>" . $queryString . "</b></div><div id='" . $rand . "' style='max-height: 400px; height: auto; width: 100%; overflow: auto; border: 1px solid black;'>" . $html . "</div></div>";
     }
 
-    private function pre($result)
+    public function pre($result)
     {
         echo "<pre>";
         var_dump($result);
@@ -507,5 +433,64 @@ class Doc {
     public function getXPathAString(): string
     {
         return $this->xpath_string;
+    }
+
+    private function setData(mixed $data)
+    {
+        $this->data = $data;
+    }
+
+    public function getData($key = NULL) {
+        if($key != NULL) {
+            return $this->data[$key];
+        }
+
+        return $this->data;
+    }
+
+    public function getModule(string $name) {
+        $name = $this->upperFirst($name);
+        $path = __DIR__ . "/Modules/" . $name;
+        if(!is_dir($path)) {
+            return false;
+        }
+
+        $this->loadedModuleName = $name;
+        return $this;
+    }
+
+    public function getEntry(string $name, string $key) {
+        try {
+            if($this->loadedModuleName === "") {
+                throw new Exception("call getModule() first");
+            }
+
+            $name = $this->upperFirst($name);
+            $path = __DIR__ . "/Modules/" . $this->loadedModuleName . "/" . $name . ".php";
+            if(!is_file($path)) {
+                return false;
+            }
+
+            require_once $path;
+            $functionName = $this->classComforn($name) . "_" . $this->upperFirst($key);
+
+            if(!function_exists($functionName)) {
+                return NULL;
+            }
+
+            return $functionName($this);
+        } catch (Exception $e) {
+            die($e);
+        }
+    }
+
+    private function upperFirst(string $string) {
+        $string = strtolower($string);
+        return ucfirst($string);
+    }
+
+    private function classComforn(string $string) {
+        $string = str_replace("-", "_", $string);
+        return $string;
     }
 }
