@@ -108,9 +108,16 @@ class buildQueryComponents
                         return false;
                     }
 
+                    // correct missing quotes
+                    if($attribute_value !== "" && !preg_match("/[\"']/i", $attribute_value)) {
+                        $attribute_value = '"' . $attribute_value . '"';
+                        $first_char_of_value = '"';
+                        $last_char_of_value = '"';
+                    }
+
                     // attribute_value is invalid
                     if ($operator !== "" && $attribute_value !== "" && $first_char_of_value !== $last_char_of_value) {
-                        return false;
+                        die("attribute_value is invalid: '" . $attribute_value . "'");
                     }
 
                     // delete first and last char of value, what should be either ' or "

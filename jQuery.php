@@ -118,7 +118,9 @@ class Doc {
         // -- initialize DOMDocument
         $doc = new DOMDocument();
         libxml_use_internal_errors(true);
-        $doc->loadHTML($html, LIBXML_HTML_NOIMPLIED);
+        $doc->validateOnParse = false;
+        $doc->recover = true;
+        $doc->loadHTML($html, LIBXML_BIGLINES | LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED);
         libxml_use_internal_errors();
 
         // -- initialize DOMXPath
@@ -130,6 +132,8 @@ class Doc {
         // -- prove
         if($this->prove == true) {
             $this->proveHTML($html, $queryString);
+
+            echo "<br />Parsed HTML:<br /><textarea style='width: 500px; max-height: 200px'>" . $doc->saveHTML() . "</textarea><br />";
         }
 
         return $xPath->query($xPathExpression);
@@ -200,13 +204,13 @@ class Doc {
                         $attr_value = $operation["value"];
 
                         $__result = match ($attr_operator) {
-                            "=" => '@' . $attributeName . '="' . $attr_value . '"',
+                            "=" => '@' . $attributeName . '=' . $this->xpath_quote($attr_value),
                             "" => ($attr_value === "") ? '@' . $attributeName . '' : NULL,
-                            "~=" => 'contains(concat(" ", normalize-space(@' . $attributeName . '), " "), " ' . $attr_value . ' ")',
-                            "|=" => '@' . $attributeName . '="' . $attr_value . '" or starts-with(@' . $attributeName . ', concat("' . $attr_value . '", "-"))',
-                            "^=" => 'starts-with(@' . $attributeName . ', "' . $attr_value . '")',
-                            "\$=" => 'ends-with(@' . $attributeName . ', "' . $attr_value . '")',
-                            "*=" => 'contains(@' . $attributeName . ',"' . $attr_value . '")',
+                            "~=" => 'contains(concat(" ", normalize-space(@' . $attributeName . '), " "), ' . $this->xpath_quote(" " . $attr_value . " ") . ')',
+                            "|=" => '@' . $attributeName . '=' . $this->xpath_quote($attr_value) . ' or starts-with(@' . $attributeName . ', concat(' . $this->xpath_quote($attr_value) . ', "-"))',
+                            "^=" => 'starts-with(@' . $attributeName . ', ' . $this->xpath_quote($attr_value) . ')',
+                            "\$=" => 'ends-with(@' . $attributeName . ', ' . $this->xpath_quote($attr_value) . ')',
+                            "*=" => 'contains(@' . $attributeName . ', ' . $this->xpath_quote($attr_value) . ')',
                         };
 
                         if($__result !== NULL) {
@@ -295,7 +299,9 @@ class Doc {
         // -- initialize DOMDocument
         $doc = new DOMDocument();
         libxml_use_internal_errors(true);
-        $doc->loadHTML($this->html, LIBXML_HTML_NOIMPLIED);
+        $doc->validateOnParse = false;
+        $doc->recover = true;
+        $doc->loadXML($this->html, LIBXML_BIGLINES | LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED);
         libxml_use_internal_errors();
 
         // -- initialize DOMXPath
@@ -500,5 +506,37 @@ class Doc {
     private function classComforn(string $string) {
         $string = str_replace("-", "_", $string);
         return $string;
+    }
+
+    function xpath_quote(string $value) :string
+    {
+        if(!str_contains($value, '"')) {
+            return '"'.$value.'"';
+        }
+        if(!str_contains($value, '\'')) {
+            return '\''.$value.'\'';
+        }
+
+        $sb='concat(';
+        $substrings=explode('"',$value);
+        for($i=0;$i<count($substrings);++$i) {
+            $needComma=($i>0);
+            if($substrings[$i]!==''){
+                if($i>0){
+                    $sb.=', ';
+                }
+                $sb.='"'.$substrings[$i].'"';
+                $needComma=true;
+            }
+
+            if($i < (count($substrings) -1)) {
+                if($needComma) {
+                    $sb.=', ';
+                }
+                $sb.="'\"'";
+            }
+        }
+        $sb.=')';
+        return $sb;
     }
 }
