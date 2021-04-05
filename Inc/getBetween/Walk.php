@@ -165,13 +165,12 @@ class Walk {
     {
         foreach ($array as $key => $value) {
             if (is_array($value)) {
-                if (!$callback($value, $key)) {
+                if ($callback($value, $key)) {
+                    $array[$key] = $value;
+                } else {
                     unset($array[$key]);
                     $array[$key] = $this->array_filter_recursive($value, $callback);
-                } else {
-                    $array[$key] = $value;
                 }
-
             } else {
                 if (!$callback($value, $key)) {
                     unset($array[$key]);

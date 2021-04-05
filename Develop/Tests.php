@@ -116,6 +116,12 @@ function tests_section($title, $html, $query_string, $expected_result, $output =
     }
 
     if($output === true) {
+        echo "<h4>Array</h4>";
+        echo "<pre>";
+        var_dump($doc->getQueryStringArray());
+        echo "</pre>";
+
+        echo "<h4>List</h4>";
     ?>
 
     <ul>
@@ -144,13 +150,13 @@ function tests_section($title, $html, $query_string, $expected_result, $output =
     }
 }
 
-tests_section(
+/*tests_section(
     "Invalid HTML",
     "<ul><ol>Test</ol></ul>",
     "ul ol",
     '[{"nodeValue":"Test"},{"textContent":"Test"},{"tagName":"ol"}]',
     true
-);
+);*/
 
 tests_section(
     "Single element",
@@ -240,8 +246,7 @@ tests_section(
     "Single *",
     "<div>Test</div>",
     "*",
-    '[{"nodeValue":"Test"},{"textContent":"Test"},{"tagName":"div"}]',
-    true
+    '[{"nodeValue":"Test"},{"textContent":"Test"},{"tagName":"div"}]'
 );
 
 tests_section(
@@ -338,8 +343,7 @@ tests_section(
 
 <p>My best friend is Mickey.</p>",
     "h1, p",
-    '[{"nodeValue":"Welcome to My Homepage\r\n  My name is Donald.\r\n  I live in Duckburg.\r\nMy best friend is Mickey."},{"textContent":"Welcome to My Homepage\r\n  My name is Donald.\r\n  I live in Duckburg.\r\nMy best friend is Mickey."},{"tagName":"h1"},{"nodeValue":"My name is Donald."},{"textContent":"My name is Donald."},{"tagName":"p"},{"nodeValue":"I live in Duckburg."},{"textContent":"I live in Duckburg."},{"tagName":"p"},{"nodeValue":"My best friend is Mickey."},{"textContent":"My best friend is Mickey."},{"tagName":"p"}]',
-    true
+    '[{"nodeValue":"Welcome to My Homepage\r\n  My name is Donald.\r\n  I live in Duckburg.\r\nMy best friend is Mickey."},{"textContent":"Welcome to My Homepage\r\n  My name is Donald.\r\n  I live in Duckburg.\r\nMy best friend is Mickey."},{"tagName":"h1"},{"nodeValue":"My name is Donald."},{"textContent":"My name is Donald."},{"tagName":"p"},{"nodeValue":"I live in Duckburg."},{"textContent":"I live in Duckburg."},{"tagName":"p"},{"nodeValue":"My best friend is Mickey."},{"textContent":"My best friend is Mickey."},{"tagName":"p"}]'
 );
 
 tests_section(
@@ -408,7 +412,7 @@ tests_section(
     '[{"nodeValue":""},{"textContent":""},{"tagName":"img"},{"attributes":[{"name":"src","value":"klematis.jpg"}]},{"attributes":[{"name":"title","value":"klematis flower"}]},{"attributes":[{"name":"width","value":"150"}]},{"attributes":[{"name":"height","value":"113"}]}]'
 );
 
-tests_section(
+/*tests_section(
     "[attribute|=value] selector",
     '<p lang="en">Hello!</p>
 <p lang="en-us">Hi!</p>
@@ -418,7 +422,477 @@ tests_section(
     "[lang|=en]",
     '[{"nodeValue":""},{"textContent":""},{"tagName":"img"},{"attributes":[{"name":"src","value":"klematis.jpg"}]},{"attributes":[{"name":"title","value":"klematis flower"}]},{"attributes":[{"name":"width","value":"150"}]},{"attributes":[{"name":"height","value":"113"}]}]',
     true
+);*/
+
+tests_section(
+    "[attribute|=value] selector",
+    '<div><p lang="en">Hello!</p>
+<p lang="en-us">Hi!</p>
+<p lang="en-gb">Ello!</p>
+<p lang="us">Hi!</p>
+<p lang="no">Hei!</p></div>',
+    "[lang|=en]",
+    '[{"nodeValue":"Hello!"},{"textContent":"Hello!"},{"tagName":"p"},{"attributes":[{"name":"lang","value":"en"}]},{"nodeValue":"Hi!"},{"textContent":"Hi!"},{"tagName":"p"},{"attributes":[{"name":"lang","value":"en-us"}]},{"nodeValue":"Ello!"},{"textContent":"Ello!"},{"tagName":"p"},{"attributes":[{"name":"lang","value":"en-gb"}]}]'
 );
+
+tests_section(
+    "CSS [attribute^=value] Selector",
+    '<body><div class="first_test">The first div element.</div>
+<div class="second">The second div element.</div>
+<div class="test">The third div element.</div>
+<div class="test_ex">The fourth div element.</div>
+<p class="test">This is a paragraph.</p>
+<p class="test_ex">This is a paragraph.</p>
+</body>',
+    'div[class^="test"]',
+    '[{"nodeValue":"The third div element."},{"textContent":"The third div element."},{"tagName":"div"},{"attributes":[{"name":"class","value":"test"}]},{"nodeValue":"The fourth div element."},{"textContent":"The fourth div element."},{"tagName":"div"},{"attributes":[{"name":"class","value":"test_ex"}]}]'
+);
+
+tests_section(
+    "CSS [attribute$=value] Selector",
+    '<body>
+
+<div class="first_test">The first div element.</div>
+<div class="second">The second div element.</div>
+<div class="test">The third div element.</div>
+<p class="test">This is some text in a paragraph.</p>
+
+</body>',
+    'div[class$="test"]',
+    '[{"nodeValue":"The first div element."},{"textContent":"The first div element."},{"tagName":"div"},{"attributes":[{"name":"class","value":"first_test"}]},{"nodeValue":"The third div element."},{"textContent":"The third div element."},{"tagName":"div"},{"attributes":[{"name":"class","value":"test"}]}]'
+);
+
+tests_section(
+    "CSS [attribute*=value] Selector",
+    '<body>
+
+<div class="first_test">The first div element.</div>
+<div class="second">The second div element.</div>
+<div class="test">The third div element.</div>
+<p class="test">This is some text in a paragraph.</p>
+
+</body>',
+    'div[class*="test"]',
+    '[{"nodeValue":"The first div element."},{"textContent":"The first div element."},{"tagName":"div"},{"attributes":[{"name":"class","value":"first_test"}]},{"nodeValue":"The third div element."},{"textContent":"The third div element."},{"tagName":"div"},{"attributes":[{"name":"class","value":"test"}]}]'
+);
+
+tests_section(
+    "CSS :empty Selector",
+    '<body>
+
+<p></p>
+<p>A paragraph.</p>
+<p>Another paragraph.</p>
+
+</body>',
+    'p:empty',
+    '[{"nodeValue":""},{"textContent":""},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :first-child Selector",
+    '<body>
+
+<p>This paragraph is the first child of its parent (body).</p>
+
+<h1>Welcome to My Homepage</h1>
+<p>This paragraph is not the first child of its parent.</p>
+
+<div>
+  <p>This paragraph is the first child of its parent (div).</p>
+  <p>This paragraph is not the first child of its parent.</p>
+</div>
+
+</body>',
+    'p:first-child',
+    '[{"nodeValue":"This paragraph is the first child of its parent (body)."},{"textContent":"This paragraph is the first child of its parent (body)."},{"tagName":"p"},{"nodeValue":"This paragraph is the first child of its parent (div)."},{"textContent":"This paragraph is the first child of its parent (div)."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :first-of-type Selector",
+    '<body>
+
+<p>The first paragraph.</p>
+<p>The second paragraph.</p>
+<p>The third paragraph.</p>
+<p>The fourth paragraph.</p>
+
+</body>',
+    'p:first-of-type',
+    '[{"nodeValue":"The first paragraph."},{"textContent":"The first paragraph."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :has Selector",
+    '<body>
+
+<a>Not this</a>
+<a>This <img /></a>
+<h1>Not this</h1>
+<h1>This</h1>
+<p>Abc</p>
+</body>',
+    'a:has(> img), h1:has(+ p)',
+    '[{"nodeValue":"This "},{"textContent":"This "},{"tagName":"a"},{"nodeValue":"This"},{"textContent":"This"},{"tagName":"h1"}]'
+);
+
+tests_section(
+    "CSS :last-child Selector",
+    '<body>
+
+<p>The first paragraph.</p>
+<p>The second paragraph.</p>
+<p>The third paragraph.</p>
+<p>The fourth paragraph.</p>
+
+</body>',
+    'p:last-child',
+    '[{"nodeValue":"The fourth paragraph."},{"textContent":"The fourth paragraph."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :last-of-type Selector",
+    '<body>
+
+<p>The first paragraph.</p>
+<p>The second paragraph.</p>
+<p>The third paragraph.</p>
+<p>The fourth paragraph.</p>
+
+</body>',
+    'p:last-of-type',
+    '[{"nodeValue":"The fourth paragraph."},{"textContent":"The fourth paragraph."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "Spaces",
+    '<body>
+
+<div>not okay</div>
+<p>okay</p>
+<span>not okay</span>
+
+</body>',
+    '   p  ',
+    '[{"nodeValue":"okay"},{"textContent":"okay"},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :not Selector",
+    '<body>
+
+<h1>This is a heading</h1>
+
+<p>This is a paragraph.</p>
+<p>This is another paragraph.</p>
+
+<div>This is some text in a div element.</div>
+
+<a href="https://www.w3schools.com" target="_blank">Link to W3Schools!</a>
+
+</body>',
+    ':not(p)',
+    '[{"nodeValue":"\r\n\r\nThis is a heading\r\n\r\nThis is a paragraph.\r\nThis is another paragraph.\r\n\r\nThis is some text in a div element.\r\n\r\nLink to W3Schools!\r\n\r\n"},{"textContent":"\r\n\r\nThis is a heading\r\n\r\nThis is a paragraph.\r\nThis is another paragraph.\r\n\r\nThis is some text in a div element.\r\n\r\nLink to W3Schools!\r\n\r\n"},{"tagName":"body"},{"nodeValue":"This is a heading"},{"textContent":"This is a heading"},{"tagName":"h1"},{"nodeValue":"This is some text in a div element."},{"textContent":"This is some text in a div element."},{"tagName":"div"},{"nodeValue":"Link to W3Schools!"},{"textContent":"Link to W3Schools!"},{"tagName":"a"},{"attributes":[{"name":"href","value":"https:\/\/www.w3schools.com"}]},{"attributes":[{"name":"target","value":"_blank"}]}]'
+);
+
+tests_section(
+    "CSS :nth-child Selector #1",
+    '<body>
+
+<p>The first paragraph.</p>
+<p>The second paragraph.</p>
+<p>The third paragraph.</p>
+<p>The fourth paragraph.</p>
+
+</body>',
+    'p:nth-child(2)',
+    '[{"nodeValue":"The second paragraph."},{"textContent":"The second paragraph."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :nth-child Selector #2",
+    '<body>
+
+<p>The first paragraph.</p>
+<p>The second paragraph.</p>
+<p>The third paragraph.</p>
+<p>The fourth paragraph.</p>
+
+</body>',
+    'p:nth-child(2n+1)',
+    '[{"nodeValue":"The first paragraph."},{"textContent":"The first paragraph."},{"tagName":"p"},{"nodeValue":"The third paragraph."},{"textContent":"The third paragraph."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :nth-child Selector #3",
+    '<body>
+
+<p>The first paragraph.</p>
+<p>The second paragraph.</p>
+<p>The third paragraph.</p>
+<p>The fourth paragraph.</p>
+
+</body>',
+    'p:nth-child(even)',
+    '[{"nodeValue":"The second paragraph."},{"textContent":"The second paragraph."},{"tagName":"p"},{"nodeValue":"The fourth paragraph."},{"textContent":"The fourth paragraph."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :nth-child Selector #4",
+    '<body>
+
+<p>The first paragraph.</p>
+<p>The second paragraph.</p>
+<p>The third paragraph.</p>
+<p>The fourth paragraph.</p>
+
+</body>',
+    'p:nth-child(odd)',
+    '[{"nodeValue":"The first paragraph."},{"textContent":"The first paragraph."},{"tagName":"p"},{"nodeValue":"The third paragraph."},{"textContent":"The third paragraph."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :nth-child Selector #5",
+    '<body>
+    <p>1</p>
+    <p>2</p>
+    <p>3</p>
+    <p>4</p>
+    <p>5</p>
+    <p>6</p>
+    <p>7</p>
+    <p>8</p>
+    <p>9</p>
+    <p>10</p>
+</body>',
+    'p:nth-child(n+6)',
+    '[{"nodeValue":"6"},{"textContent":"6"},{"tagName":"p"},{"nodeValue":"7"},{"textContent":"7"},{"tagName":"p"},{"nodeValue":"8"},{"textContent":"8"},{"tagName":"p"},{"nodeValue":"9"},{"textContent":"9"},{"tagName":"p"},{"nodeValue":"10"},{"textContent":"10"},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :nth-child Selector #6",
+    '<body>
+    <p>1</p>
+    <p>2</p>
+    <p>3</p>
+    <p>4</p>
+    <p>5</p>
+    <p>6</p>
+    <p>7</p>
+    <p>8</p>
+    <p>9</p>
+    <p>10</p>
+</body>',
+    'p:nth-child(-n+3)',
+    '[{"nodeValue":"1"},{"textContent":"1"},{"tagName":"p"},{"nodeValue":"2"},{"textContent":"2"},{"tagName":"p"},{"nodeValue":"3"},{"textContent":"3"},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :nth-child Selector #7",
+    '<body>
+
+<p>The first paragraph.</p>
+<p>The second paragraph.</p>
+<p>The third paragraph.</p>
+<p>The fourth paragraph.</p>
+
+</body>',
+    'p:nth-child(0n+1)',
+    '[{"nodeValue":"The first paragraph."},{"textContent":"The first paragraph."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :nth-of-type Selector",
+    '<body>
+    <p>The first paragraph.</p>
+    <p>The second paragraph.</p>
+    <p>The third paragraph.</p>
+    <p>The fourth paragraph.</p>
+</body>',
+    'p:nth-of-type(2)',
+    '[{"nodeValue":"The second paragraph."},{"textContent":"The second paragraph."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :nth-of-type vs :nth-child #1",
+    '<section>
+   <h1>Words</h1>
+   <p>Little</p>
+   <p>Piggy</p>
+</section>',
+    'p:nth-child(2)',
+    '[{"nodeValue":"Little"},{"textContent":"Little"},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :nth-of-type vs :nth-child #2",
+    '<section>
+   <h1>Words</h1>
+   <p>Little</p>
+   <p>Piggy</p>
+</section>',
+    'p:nth-of-type(2)',
+    '[{"nodeValue":"Piggy"},{"textContent":"Piggy"},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :nth-of-type vs :nth-child #3",
+    '<section>
+   <h1>Words</h1>
+   <p>Little</p>
+   <p>Piggy</p>
+</section>',
+    'p:nth-of-type(2), p:nth-child(2)',
+    '[{"nodeValue":"Little"},{"textContent":"Little"},{"tagName":"p"},{"nodeValue":"Piggy"},{"textContent":"Piggy"},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :only-child",
+    '<body>
+    <div><p>This is a paragraph A.</p></div>
+    <div><span>This is a span.</span><p>This is a paragraph B.</p></div>
+</body>',
+    'p:only-child',
+    '[{"nodeValue":"This is a paragraph A."},{"textContent":"This is a paragraph A."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :only-of-type",
+    '<body>
+    <div><p>This is a paragraph A.</p></div>
+    <div><p>This is a paragraph B.</p><p>This is a paragraph C.</p></div>
+</body>',
+    'p:only-of-type',
+    '[{"nodeValue":"This is a paragraph A."},{"textContent":"This is a paragraph A."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :only-of-type vs :only-child #1",
+    '<body>
+    <div><p>This is a paragraph A.</p><span>This is paragraph B</span></div>
+    <div><p>This is a paragraph C.</p><p>This is a paragraph D.</p></div>
+</body>',
+    'p:only-of-type',
+    '[{"nodeValue":"This is a paragraph A."},{"textContent":"This is a paragraph A."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :only-of-type vs :only-child #2",
+    '<body>
+    <div><p>This is a paragraph A.</p><span>This is paragraph B</span></div>
+    <div><p>This is a paragraph C.</p><p>This is a paragraph D.</p></div>
+    <div><p>This is a paragraph E.</p></div>
+</body>',
+    'p:only-of-type:not(:only-child)',
+    '[{"nodeValue":"This is a paragraph A."},{"textContent":"This is a paragraph A."},{"tagName":"p"}]'
+);
+
+tests_section(
+    "CSS :optional",
+    '<body>
+    <div></div>
+    <input value="this" />
+    <select><option>this</option></select>
+    <textarea>this</textarea>
+    
+    <input value="not this" required />
+    <select required><option>not this</option></select>
+    <textarea required>not this</textarea>
+</body>',
+    ':optional',
+    '[{"nodeValue":""},{"textContent":""},{"tagName":"input"},{"attributes":[{"name":"value","value":"this"}]},{"nodeValue":"this"},{"textContent":"this"},{"tagName":"select"},{"nodeValue":"this"},{"textContent":"this"},{"tagName":"textarea"}]'
+);
+
+tests_section(
+    "CSS :required",
+    '<body>
+    <div></div>
+    <input value="this" />
+    <select><option>this</option></select>
+    <textarea>this</textarea>
+    
+    <input value="not this" required />
+    <select required><option>not this</option></select>
+    <textarea required>not this</textarea>
+</body>',
+    ':required',
+    '[{"nodeValue":""},{"textContent":""},{"tagName":"input"},{"attributes":[{"name":"value","value":"not this"}]},{"attributes":[{"name":"required","value":""}]},{"nodeValue":"not this"},{"textContent":"not this"},{"tagName":"select"},{"attributes":[{"name":"required","value":""}]},{"nodeValue":"not this"},{"textContent":"not this"},{"tagName":"textarea"},{"attributes":[{"name":"required","value":""}]}]'
+);
+
+tests_section(
+    "CSS :read-only",
+    '<body>
+    <input contenteditable value="1" />
+    <input contenteditable readonly value="2" />
+    <input contenteditable="true" value="3" />
+    <input contenteditable="true" readonly value="4" />
+    <input contenteditable="false" value="5" />
+    <input contenteditable="false" readonly value="6" />
+    <input value="7" />
+    <input readonly value="8" />
+</body>',
+    'input:read-only',
+    '[{"nodeValue":""},{"textContent":""},{"tagName":"input"},{"attributes":[{"name":"contenteditable","value":"false"}]},{"attributes":[{"name":"readonly","value":"readonly"}]},{"attributes":[{"name":"value","value":"6"}]},{"nodeValue":""},{"textContent":""},{"tagName":"input"},{"attributes":[{"name":"readonly","value":"readonly"}]},{"attributes":[{"name":"value","value":"8"}]}]'
+);
+
+tests_section(
+    "CSS :read-write",
+    '<body>
+    <input contenteditable value="1" />
+    <input contenteditable readonly value="2" />
+    <input contenteditable="true" value="3" />
+    <input contenteditable="true" readonly value="4" />
+    <input contenteditable="false" value="5" />
+    <input contenteditable="false" readonly value="6" />
+    <input value="7" />
+    <input readonly value="8" />
+    <div>9</div>
+    <div contenteditable="true">10</div>
+    <div contenteditable="false">11</div>
+</body>',
+    'input:read-write',
+    '[{"nodeValue":""},{"textContent":""},{"tagName":"input"},{"attributes":[{"name":"contenteditable","value":""}]},{"attributes":[{"name":"value","value":"1"}]},{"nodeValue":""},{"textContent":""},{"tagName":"input"},{"attributes":[{"name":"contenteditable","value":""}]},{"attributes":[{"name":"readonly","value":"readonly"}]},{"attributes":[{"name":"value","value":"2"}]},{"nodeValue":""},{"textContent":""},{"tagName":"input"},{"attributes":[{"name":"contenteditable","value":"true"}]},{"attributes":[{"name":"value","value":"3"}]},{"nodeValue":""},{"textContent":""},{"tagName":"input"},{"attributes":[{"name":"contenteditable","value":"true"}]},{"attributes":[{"name":"readonly","value":"readonly"}]},{"attributes":[{"name":"value","value":"4"}]},{"nodeValue":""},{"textContent":""},{"tagName":"input"},{"attributes":[{"name":"contenteditable","value":"false"}]},{"attributes":[{"name":"value","value":"5"}]},{"nodeValue":""},{"textContent":""},{"tagName":"input"},{"attributes":[{"name":"value","value":"7"}]}]'
+);
+
+tests_section(
+    "Data-Attribute #1",
+    '<body>
+    <div data-text="works"></div>
+</body>',
+    'div[data-text="works"]',
+    '[{"nodeValue":""},{"textContent":""},{"tagName":"div"},{"attributes":[{"name":"data-text","value":"works"}]}]'
+);
+
+tests_section(
+    "Data-Attribute #2",
+    '<body>
+    <div data-text="works">first</div>
+    <div data-text="works">second</div>
+</body>',
+    'div[data-text="works"]',
+    '[{"nodeValue":"first"},{"textContent":"first"},{"tagName":"div"},{"attributes":[{"name":"data-text","value":"works"}]},{"nodeValue":"second"},{"textContent":"second"},{"tagName":"div"},{"attributes":[{"name":"data-text","value":"works"}]}]'
+);
+
+tests_section(
+    "Data-Attribute #3",
+    '<body>
+    <div data-text="works">first</div>
+    <div data-text="works">second</div>
+</body>',
+    'div[data-text="works"]:first-of-type',
+    '[{"nodeValue":"first"},{"textContent":"first"},{"tagName":"div"},{"attributes":[{"name":"data-text","value":"works"}]}]'
+);
+
+tests_section(
+    "Multiple pseudo classes",
+    '<body>
+    <div>Not this1</div>
+    <div>this</div>
+    <div>Not this2</div>
+</body>',
+    'div:not(:first-child):not(:last-child)',
+    '[{"nodeValue":"first"},{"textContent":"first"},{"tagName":"div"},{"attributes":[{"name":"data-text","value":"works"}]}]'
+,true);
 ?>
 </body>
 </html>

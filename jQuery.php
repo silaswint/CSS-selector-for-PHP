@@ -116,11 +116,11 @@ class Doc {
         $html = $this->html;
 
         // -- initialize DOMDocument
-        $doc = new DOMDocument();
+        $doc = new DOMDocument('1.0', 'UTF-8');
         libxml_use_internal_errors(true);
         $doc->validateOnParse = false;
         $doc->recover = true;
-        $doc->loadHTML($html, LIBXML_BIGLINES | LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED);
+        $doc->loadHTML($html, LIBXML_SCHEMA_CREATE | LIBXML_BIGLINES | LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED);
         libxml_use_internal_errors();
 
         // -- initialize DOMXPath
@@ -144,7 +144,6 @@ class Doc {
         $commas = [];
 
         foreach($currentNodes as $currentNode) {
-
             $string = "";
 
             $all_attributes = [];
@@ -209,7 +208,7 @@ class Doc {
                             "~=" => 'contains(concat(" ", normalize-space(@' . $attributeName . '), " "), ' . $this->xpath_quote(" " . $attr_value . " ") . ')',
                             "|=" => '@' . $attributeName . '=' . $this->xpath_quote($attr_value) . ' or starts-with(@' . $attributeName . ', concat(' . $this->xpath_quote($attr_value) . ', "-"))',
                             "^=" => 'starts-with(@' . $attributeName . ', ' . $this->xpath_quote($attr_value) . ')',
-                            "\$=" => 'ends-with(@' . $attributeName . ', ' . $this->xpath_quote($attr_value) . ')',
+                            "\$=" => 'substring(@' . $attributeName . ', string-length(@' . $attributeName . ') - string-length(' . $this->xpath_quote($attr_value) . ') + 1)  = ' . $this->xpath_quote($attr_value),
                             "*=" => 'contains(@' . $attributeName . ', ' . $this->xpath_quote($attr_value) . ')',
                         };
 
@@ -285,6 +284,10 @@ class Doc {
 
             // -- result string for current node
             $commas[] = $string;
+
+            if(count($currentNodes) > 0) {
+                $this->string_recreated = "//*";
+            }
         }
 
         return implode(" | //*", $commas);
@@ -297,19 +300,20 @@ class Doc {
         }
 
         // -- initialize DOMDocument
-        $doc = new DOMDocument();
+        $doc = new DOMDocument('1.0', 'UTF-8');
         libxml_use_internal_errors(true);
         $doc->validateOnParse = false;
         $doc->recover = true;
-        $doc->loadXML($this->html, LIBXML_BIGLINES | LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED);
+        $doc->loadHTML($this->html, LIBXML_BIGLINES | LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED);
         libxml_use_internal_errors();
 
         // -- initialize DOMXPath
         $xPath = new DOMXpath($doc);
 
         $query = $xPath->query($previousXQueryString);
+
         if($query === false) {
-            echo "<pre>" . $previousXQueryString . " is not valid</pre>";
+            echo "<pre>'" . $previousXQueryString . "' is not valid</pre>";
             return "";
         }
 
@@ -349,7 +353,7 @@ class Doc {
         }
 
         if(!isset($output_array)) {
-            $preg_match = preg_match('/(?<a>[0-9]+|)(?<n>n|-n)(?<sign>\+|\-|)(?<b>[0-9]+|)/', $formula, $output_array);
+            $preg_match = preg_match('/(?<a>[0-9]+|)(?<n>n|-n)?(?<sign>\+|\-|)(?<b>[0-9]+|)/', $formula, $output_array);
             if(!$preg_match) {
                 die("Formula doesn't have a correct syntax (#1): " . $formula);
             }

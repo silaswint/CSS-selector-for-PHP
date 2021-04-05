@@ -77,8 +77,8 @@ class getBetween
 
             $pos_end_total += $pos_end + strlen($end_string);
 
-            $new_pos_start = $pos_end_total - strlen($main) - strlen($start_string) + 1;
-            $new_pos_end = $new_pos_start + strlen($main);
+            $new_pos_start = $pos_end_total - strlen($main) - strlen($start_string);
+            $new_pos_end = $new_pos_start + 1 + strlen($main);
 
             $siblings[] = [
                 "main" => $main,
@@ -104,14 +104,16 @@ class getBetween
             $sibling_main = $sibling["main"];
             $sibling_pos_start = $sibling["pos_start"];
             $sibling_pos_end = $sibling["pos_end"];
+            $sibling_original_string = $sibling["original_string"];
 
             if($sibling_main !== "") {
                 $result[] = [
                     "node" => $sibling_main,
                     "pos_start" => $sibling_pos_start,
                     "pos_end" => $sibling_pos_end,
+                    "start_to_end" => substr($sibling_original_string, $sibling_pos_start, ($sibling_pos_end - $sibling_pos_start) - 1),
                     "parent" => $sibling["parent"],
-                    "original_string" => $sibling["original_string"],
+                    "original_string" => $sibling_original_string,
                     "children" => $this->getArray($sibling_main, $start_string, $end_string),
                 ];
             }
@@ -138,7 +140,7 @@ class getBetween
                 if(isset($value["node"])) {
                     $before_string = substr(
                         $value["original_string"],
-                        ($value["pos_start"] - strlen($this->start_string) - strlen($this->options["before_string"]) - 1),
+                        ($value["pos_start"] - strlen($this->start_string) - strlen($this->options["before_string"])),
                         strlen($this->options["before_string"])
                     );
 
